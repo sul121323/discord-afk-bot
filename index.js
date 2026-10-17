@@ -151,54 +151,54 @@ app.get('/', (req, res) => {
 
 app.post('/api/start', async (req, res) => {
     const { tokens, voiceId, device, mode, streamMode } = req.body;
-    addLog('نوع الجهاز (' + device + ') | الصوت (' + mode + ') | البث (' + streamMode + ')');
+    addLog(`[إعدادات] بدء تشغيل الحسابات بشكل متتابع...`);
+
+    // إيقاف أي عملاء سابقين أولاً لتجنب التداخل
+    clients.forEach(c => { try { c.destroy(); } catch(e){} });
+    clients = [];
 
     tokens.forEach((token, index) => {
         token = token.trim();
         if(!token) return;
 
-        const isMobile = device === 'mobile' || device === 'ipad';
-        const client = new Client({
-            checkUpdate: false,
-            ws: { properties: { $os: isMobile ? 'iOS' : 'Windows', $browser: device } }
-        });
+        // وضع فاصل زمني (بين كل حساب وحساب ثاني ثانيتين) لتفادي حظر الديسكورد ودخولها سوياً للروم
+        setTimeout(() => {
+            const isMobile = device === 'mobile' || device === 'ipad';
+            const client = new Client({
+                checkUpdate: false,
+                ws: { properties: { $os: isMobile ? 'iOS' : 'Windows', $browser: device } }
+            });
 
-        client.on('ready', async () => {
-            addLog('[نجاح] تسجيل الدخول بالحساب: ' + client.user.tag);
-            try {
-                const channel = await client.channels.fetch(voiceId);
-                if (channel && channel.isVoice()) {
-                    joinVoiceChannel({
-                        channelId: channel.id,
-                        guildId: channel.guild.id,
-                        adapterCreator: channel.guild.voiceAdapterCreator,
-                        selfMute: mode === 'mute_deaf' || mode === 'mute_only',
-                        selfDeaf: mode === 'mute_deaf',
-                    });
-
-                    if(streamMode === 'camera') {
-                        addLog('[📷] تفعيل الكاميرا الوهمية للحساب: ' + client.user.username);
-                    } else if(streamMode === 'screen') {
-                        addLog('[🖥️] تفعيل مشاركة الشاشة (شير) للحساب: ' + client.user.username);
+            client.on('ready', async () => {
+                addLog(`[نجاح] دخول الحساب: ${client.user.tag}`);
+                try {
+                    const channel = await client.channels.fetch(voiceId);
+                    if (channel && channel.isVoice()) {
+                        joinVoiceChannel({
+                            channelId: channel.id,
+                            guildId: channel.guild.id,
+                            adapterCreator: channel.guild.voiceAdapterCreator,
+                            selfMute: mode === 'mute_deaf' || mode === 'mute_only',
+                            selfDeaf: mode === 'mute_deaf',
+                        });
+                        addLog(`[🔊] الحساب ${client.user.username} استقر داخل الروم الصوتي!`);
+                    } else {
+                        addLog(`[خطأ] لم يتم العثور على الروم الصوتي للحساب ${client.user.username}`);
                     }
-
-                    addLog('[🔊] انضم الحساب ' + client.user.username + ' للروم الصوتي بنجاح!');
-                } else {
-                    addLog('[خطأ] لم يتم العثور على الروم الصوتي.');
+                } catch (err) {
+                    addLog(`[خطأ صوت] ${client.user.username}: ${err.message}`);
                 }
-            } catch (err) {
-                addLog('[خطأ] فشل الانضمام للروم: ' + err.message);
-            }
-        });
+            });
 
-        client.login(token).catch(err => {
-            addLog('[خطأ توكن] فشل تسجيل الدخول رقم ' + (index + 1) + ': ' + err.message);
-        });
+            client.login(token).catch(err => {
+                addLog(`[خطأ توكن] رقم ${index + 1}: ${err.message}`);
+            });
 
-        clients.push(client);
+            clients.push(client);
+        }, index * 2500); // فاصل زمني 2.5 ثانية بين كل حساب
     });
 
-    res.json({ message: 'تم إرسال الأوامر بنجاح!' });
+    res.json({ message: 'جاري تشغيل الحسابات وتوزيعها بالروم تدريجياً!' });
 });
 
 app.post('/api/stop', (req, res) => {
