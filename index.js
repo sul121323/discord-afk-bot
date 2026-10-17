@@ -20,7 +20,7 @@ app.get('/', (req, res) => {
     <html lang="ar" dir="rtl">
     <head>
         <meta charset="UTF-8">
-        <title>لوحة تحكم التأفيك المتقدمة - Discord Panel</title>
+        <title>لوحة تحكم التأفيك المتقدمة</title>
         <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <style>
@@ -36,60 +36,34 @@ app.get('/', (req, res) => {
         </style>
     </head>
     <body class="flex h-screen overflow-hidden">
-        <div class="w-64 discord-sidebar p-4 border-r border-[#222327] flex flex-col justify-between">
-            <div>
-                <div class="flex items-center gap-3 pb-4 border-b border-[#35363c] mb-4">
-                    <div class="w-10 h-10 rounded-full bg-[#5865f2] flex items-center justify-center font-bold text-white">
-                        <i class="fa-solid fa-microphone-lines"></i>
-                    </div>
-                    <div>
-                        <h1 class="font-bold text-white text-sm">نظام التأفيك</h1>
-                        <span class="text-xs text-green-400">● متصل بنجاح</span>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="flex-1 flex flex-col discord-panel overflow-hidden">
             <header class="h-14 discord-dark px-6 flex items-center justify-between border-b border-[#222327]">
-                <span class="text-white font-bold">لوحة التحكم المركزية - خيارات الأجهزة والبث</span>
+                <span class="text-white font-bold">لوحة التحكم المركزية - نظام التأفيك الآمن</span>
             </header>
             <div class="flex-1 overflow-y-auto p-6 space-y-6">
                 <div class="discord-dark p-5 rounded-lg border border-[#35363c] space-y-4">
-                    <h2 class="text-white font-bold text-base"><i class="fa-solid fa-sliders text-[#5865f2]"></i> إعدادات التأفيك المخصصة</h2>
+                    <h2 class="text-white font-bold text-base"><i class="fa-solid fa-sliders text-[#5865f2]"></i> إعدادات التأفيك</h2>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-[#b5bac1] uppercase mb-2">نوع الجهاز الظهور بالروم</label>
+                            <label class="block text-xs font-bold text-[#b5bac1] uppercase mb-2">نوع الجهاز</label>
                             <select id="device-select" class="w-full discord-input p-2.5 rounded text-sm">
                                 <option value="desktop">بي سي (PC - Desktop)</option>
-                                <option value="laptop">لابتوب (Laptop)</option>
                                 <option value="mobile">جوال (Mobile)</option>
-                                <option value="ipad">ايباد (iPad / Tablet)</option>
                             </select>
                         </div>
-
                         <div>
-                            <label class="block text-xs font-bold text-[#b5bac1] uppercase mb-2">وضع الصوت (ميوت / ديفن)</label>
+                            <label class="block text-xs font-bold text-[#b5bac1] uppercase mb-2">وضع الصوت</label>
                             <select id="afk-mode" class="w-full discord-input p-2.5 rounded text-sm">
-                                <option value="mute_deaf">ميوت + ديفن (Mute & Deafened)</option>
-                                <option value="mute_only">ميوت فقط (Mute Only)</option>
-                                <option value="mic_open">صوت مفتوح (بدون ميوت)</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-bold text-[#b5bac1] uppercase mb-2">الكاميرا / الشير (Stream)</label>
-                            <select id="stream-mode" class="w-full discord-input p-2.5 rounded text-sm">
-                                <option value="none">بدون كاميرا وبدون شير</option>
-                                <option value="camera">فتح كاميرا وهمية</option>
-                                <option value="screen">فتح شير (مشاركة شاشة)</option>
+                                <option value="mute_deaf">ميوت + ديفن</option>
+                                <option value="mute_only">ميوت فقط</option>
                             </select>
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-xs font-bold text-[#b5bac1] uppercase mb-2">التوكنات (كل توكن في سطر)</label>
-                        <textarea id="tokens-input" rows="3" class="w-full discord-input p-2.5 rounded text-sm font-mono" placeholder="MTI3...\nMTI3..."></textarea>
+                        <textarea id="tokens-input" rows="4" class="w-full discord-input p-2.5 rounded text-sm font-mono" placeholder="ضع التوكنات هنا..."></textarea>
                     </div>
 
                     <div>
@@ -103,8 +77,8 @@ app.get('/', (req, res) => {
                     </div>
                 </div>
 
-                <div class="discord-dark p-4 rounded-lg border border-[#35363c] h-[300px] overflow-y-auto font-mono text-xs space-y-1" id="log-container">
-                    <div class="text-[#949ba4]">[System] بانتظار بدء العمليات...</div>
+                <div class="discord-dark p-4 rounded-lg border border-[#35363c] h-[250px] overflow-y-auto font-mono text-xs space-y-1" id="log-container">
+                    <div class="text-[#949ba4]">[System] بانتظار بدء التشغيل...</div>
                 </div>
             </div>
         </div>
@@ -115,14 +89,13 @@ app.get('/', (req, res) => {
                 const voiceId = document.getElementById('voice-id').value.trim();
                 const device = document.getElementById('device-select').value;
                 const mode = document.getElementById('afk-mode').value;
-                const streamMode = document.getElementById('stream-mode').value;
 
                 if(!tokensVal || !voiceId) return alert('الرجاء إدخال التوكنات وآيدي الروم!');
                 
                 const res = await fetch('/api/start', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tokens, voiceId, device, mode, streamMode })
+                    body: JSON.stringify({ tokens, voiceId, device, mode })
                 });
                 const data = await res.json();
                 alert(data.message);
@@ -150,30 +123,36 @@ app.get('/', (req, res) => {
 });
 
 app.post('/api/start', async (req, res) => {
-    const { tokens, voiceId, device, mode, streamMode } = req.body;
-    addLog(`[إعدادات] بدء تشغيل الحسابات بشكل متتابع...`);
+    const { tokens, voiceId, device, mode } = req.body;
+    addLog(`[إعدادات] بدء تسجيل الدخول المتتابع للحسابات...`);
 
-    // إيقاف أي عملاء سابقين أولاً لتجنب التداخل
     clients.forEach(c => { try { c.destroy(); } catch(e){} });
     clients = [];
 
-    tokens.forEach((token, index) => {
-        token = token.trim();
-        if(!token) return;
+    // دالة لتشغيل حساب تلو الآخر بفارق زمني آمن لضمان استقرار الاتصال الصوتي لكل حساب
+    let index = 0;
+    function loginNext() {
+        if (index >= tokens.length) return;
+        let token = tokens[index].trim();
+        index++;
 
-        // وضع فاصل زمني (بين كل حساب وحساب ثاني ثانيتين) لتفادي حظر الديسكورد ودخولها سوياً للروم
-        setTimeout(() => {
-            const isMobile = device === 'mobile' || device === 'ipad';
-            const client = new Client({
-                checkUpdate: false,
-                ws: { properties: { $os: isMobile ? 'iOS' : 'Windows', $browser: device } }
-            });
+        if (!token) {
+            loginNext();
+            return;
+        }
 
-            client.on('ready', async () => {
-                addLog(`[نجاح] دخول الحساب: ${client.user.tag}`);
-                try {
-                    const channel = await client.channels.fetch(voiceId);
-                    if (channel && channel.isVoice()) {
+        const client = new Client({
+            checkUpdate: false,
+            ws: { properties: { $os: device === 'mobile' ? 'iOS' : 'Windows',$browser: device } }
+        });
+
+        client.on('ready', async () => {
+            addLog(`[تسجيل دخول] تم دخول الحساب: ${client.user.tag}`);
+            try {
+                const channel = await client.channels.fetch(voiceId);
+                if (channel) {
+                    // الانتظار قليلاً قبل طلب الانضمام الصوتي لضمان استقرار الـ WebSocket
+                    setTimeout(() => {
                         joinVoiceChannel({
                             channelId: channel.id,
                             guildId: channel.guild.id,
@@ -181,24 +160,27 @@ app.post('/api/start', async (req, res) => {
                             selfMute: mode === 'mute_deaf' || mode === 'mute_only',
                             selfDeaf: mode === 'mute_deaf',
                         });
-                        addLog(`[🔊] الحساب ${client.user.username} استقر داخل الروم الصوتي!`);
-                    } else {
-                        addLog(`[خطأ] لم يتم العثور على الروم الصوتي للحساب ${client.user.username}`);
-                    }
-                } catch (err) {
-                    addLog(`[خطأ صوت] ${client.user.username}: ${err.message}`);
+                        addLog(`[🔊 نجاح] استقر الحساب ${client.user.username} داخل الروم الصوتي!`);
+                    }, 1000);
                 }
-            });
+            } catch (err) {
+                addLog(`[خطأ صوت] ${err.message}`);
+            }
 
-            client.login(token).catch(err => {
-                addLog(`[خطأ توكن] رقم ${index + 1}: ${err.message}`);
-            });
+            // الانتقال لتشغيل الحساب التالي بعد 4 ثوانٍ لتفادي حظر الديسكورد للصوت
+            setTimeout(loginNext, 4000);
+        });
 
-            clients.push(client);
-        }, index * 2500); // فاصل زمني 2.5 ثانية بين كل حساب
-    });
+        client.login(token).catch(err => {
+            addLog(`[خطأ توكن]: ${err.message}`);
+            setTimeout(loginNext, 2000);
+        });
 
-    res.json({ message: 'جاري تشغيل الحسابات وتوزيعها بالروم تدريجياً!' });
+        clients.push(client);
+    }
+
+    loginNext();
+    res.json({ message: 'جاري تشغيل الحسابات ودخولها للروم تباعاً...' });
 });
 
 app.post('/api/stop', (req, res) => {
@@ -216,5 +198,5 @@ app.get('/api/logs', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log('السيرفر يعمل على الرابط: http://localhost:' + PORT);
+    console.log('السيرفر يعمل محلياً على: http://localhost:' + PORT);
 });
