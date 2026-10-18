@@ -20,7 +20,7 @@ app.get('/', (req, res) => {
     <html lang="ar" dir="rtl">
     <head>
         <meta charset="UTF-8">
-        <title>لوحة تحكم التأفيك المتقدمة</title>
+        <title>لوحة تحكم التأفيك المتقدمة - Discord Panel</title>
         <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <style>
@@ -38,7 +38,7 @@ app.get('/', (req, res) => {
     <body class="flex h-screen overflow-hidden">
         <div class="flex-1 flex flex-col discord-panel overflow-hidden">
             <header class="h-14 discord-dark px-6 flex items-center justify-between border-b border-[#222327]">
-                <span class="text-white font-bold">لوحة التحكم المركزية - نظام التأفيك الآمن</span>
+                <span class="text-white font-bold">لوحة التحكم المركزية - تشغيل الحسابات من الموقع</span>
             </header>
             <div class="flex-1 overflow-y-auto p-6 space-y-6">
                 <div class="discord-dark p-5 rounded-lg border border-[#35363c] space-y-4">
@@ -46,7 +46,7 @@ app.get('/', (req, res) => {
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-[#b5bac1] uppercase mb-2">نوع الجهاز</label>
+                            <label class="block text-xs font-bold text-[#b5bac1] uppercase mb-2">نوع الجهاز بالروم</label>
                             <select id="device-select" class="w-full discord-input p-2.5 rounded text-sm">
                                 <option value="desktop">بي سي (PC - Desktop)</option>
                                 <option value="mobile">جوال (Mobile)</option>
@@ -55,7 +55,7 @@ app.get('/', (req, res) => {
                         <div>
                             <label class="block text-xs font-bold text-[#b5bac1] uppercase mb-2">وضع الصوت</label>
                             <select id="afk-mode" class="w-full discord-input p-2.5 rounded text-sm">
-                                <option value="mute_deaf">ميوت + ديفن</option>
+                                <option value="mute_deaf">ميوت + ديفن (موصى به)</option>
                                 <option value="mute_only">ميوت فقط</option>
                             </select>
                         </div>
@@ -63,7 +63,7 @@ app.get('/', (req, res) => {
 
                     <div>
                         <label class="block text-xs font-bold text-[#b5bac1] uppercase mb-2">التوكنات (كل توكن في سطر)</label>
-                        <textarea id="tokens-input" rows="4" class="w-full discord-input p-2.5 rounded text-sm font-mono" placeholder="ضع التوكنات هنا..."></textarea>
+                        <textarea id="tokens-input" rows="4" class="w-full discord-input p-2.5 rounded text-sm font-mono" placeholder="MTI3...\nMTI3..."></textarea>
                     </div>
 
                     <div>
@@ -78,7 +78,7 @@ app.get('/', (req, res) => {
                 </div>
 
                 <div class="discord-dark p-4 rounded-lg border border-[#35363c] h-[250px] overflow-y-auto font-mono text-xs space-y-1" id="log-container">
-                    <div class="text-[#949ba4]">[System] بانتظار بدء التشغيل...</div>
+                    <div class="text-[#949ba4]">[System] بانتظار الإدخال والبدء...</div>
                 </div>
             </div>
         </div>
@@ -124,12 +124,11 @@ app.get('/', (req, res) => {
 
 app.post('/api/start', async (req, res) => {
     const { tokens, voiceId, device, mode } = req.body;
-    addLog(`[إعدادات] بدء تسجيل الدخول المتتابع للحسابات...`);
+    addLog(`[إعدادات] بدء تشغيل الحسابات من واجهة الموقع...`);
 
     clients.forEach(c => { try { c.destroy(); } catch(e){} });
     clients = [];
 
-    // دالة لتشغيل حساب تلو الآخر بفارق زمني آمن لضمان استقرار الاتصال الصوتي لكل حساب
     let index = 0;
     function loginNext() {
         if (index >= tokens.length) return;
@@ -147,11 +146,10 @@ app.post('/api/start', async (req, res) => {
         });
 
         client.on('ready', async () => {
-            addLog(`[تسجيل دخول] تم دخول الحساب: ${client.user.tag}`);
+            addLog(`[تسجيل دخول] الحساب: ${client.user.tag}`);
             try {
                 const channel = await client.channels.fetch(voiceId);
                 if (channel) {
-                    // الانتظار قليلاً قبل طلب الانضمام الصوتي لضمان استقرار الـ WebSocket
                     setTimeout(() => {
                         joinVoiceChannel({
                             channelId: channel.id,
@@ -160,15 +158,14 @@ app.post('/api/start', async (req, res) => {
                             selfMute: mode === 'mute_deaf' || mode === 'mute_only',
                             selfDeaf: mode === 'mute_deaf',
                         });
-                        addLog(`[🔊 نجاح] استقر الحساب ${client.user.username} داخل الروم الصوتي!`);
+                        addLog(`[🔊 نجاح] استقر الحساب ${client.user.username} في الروم الصوتي!`);
                     }, 1000);
                 }
             } catch (err) {
                 addLog(`[خطأ صوت] ${err.message}`);
             }
 
-            // الانتقال لتشغيل الحساب التالي بعد 4 ثوانٍ لتفادي حظر الديسكورد للصوت
-            setTimeout(loginNext, 4000);
+            setTimeout(loginNext, 4000); // الفاصل الزمني الآمن بين الحسابات
         });
 
         client.login(token).catch(err => {
@@ -180,7 +177,7 @@ app.post('/api/start', async (req, res) => {
     }
 
     loginNext();
-    res.json({ message: 'جاري تشغيل الحسابات ودخولها للروم تباعاً...' });
+    res.json({ message: 'جاري تشغيل الحسابات عبر الموقع ودخولها تباعاً!' });
 });
 
 app.post('/api/stop', (req, res) => {
@@ -198,5 +195,5 @@ app.get('/api/logs', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log('السيرفر يعمل محلياً على: http://localhost:' + PORT);
+    console.log('السيرفر يعمل على: http://localhost:' + PORT);
 });
